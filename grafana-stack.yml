@@ -1,0 +1,261 @@
+# Grafana Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:11.5.2
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+          value: "Admin"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  labels:
+    app: grafana
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+  selector:
+    app: grafana
+---
+# Mimir ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mimir-config
+  labels:
+    app: mimir
+data:
+  mimir.yaml: |
+    target: all
+    server:
+      http_listen_port: 8080
+      log_level: debug
+    
+    common:
+      storage:
+        backend: filesystem
+    
+    # Single instance configuration
+    ingester:
+      ring:
+        replication_factor: 1
+---
+# Single Mimir Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mimir
+  labels:
+    app: mimir
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mimir
+  template:
+    metadata:
+      labels:
+        app: mimir
+    spec:
+      containers:
+      - name: mimir
+        image: grafana/mimir:2.14.3
+        args: ["--config.file=/tmp/mimir.yaml"]
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: config-volume
+          mountPath: /tmp/mimir.yaml
+          subPath: mimir.yaml
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "300m"
+          limits:
+            memory: "2Gi"
+            cpu: "1500m"
+      volumes:
+      - name: config-volume
+        configMap:
+          name: mimir-config
+---
+# Mimir Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mimir-1
+  labels:
+    app: mimir
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: mimir
+---
+# Tempo ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tempo-config
+  labels:
+    app: tempo
+data:
+  tempo.yaml: |
+    server:
+      http_listen_port: 3200
+      log_level: debug
+    distributor:
+      receivers:
+        otlp:
+          protocols:
+            http:
+              endpoint: "0.0.0.0:4318"
+    storage:
+      trace:
+        backend: local
+        local:
+          path: /tmp/tempo-data
+---
+# Tempo Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo
+  labels:
+    app: tempo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tempo
+  template:
+    metadata:
+      labels:
+        app: tempo
+    spec:
+      containers:
+      - name: tempo
+        image: grafana/tempo:2.7.1
+        args: ["--config.file=/tmp/tempo.yaml"]
+        ports:
+        - containerPort: 3200
+        - containerPort: 4318
+        volumeMounts:
+        - name: config-volume
+          mountPath: /tmp/tempo.yaml
+          subPath: tempo.yaml
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "300m"
+          limits:
+            memory: "2Gi"
+            cpu: "1500m"
+      volumes:
+      - name: config-volume
+        configMap:
+          name: tempo-config
+---
+# Tempo Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: tempo
+  labels:
+    app: tempo
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 3200
+    targetPort: 3200
+    protocol: TCP
+  - name: otlp
+    port: 4318
+    targetPort: 4318
+    protocol: TCP
+  selector:
+    app: tempo
+---
+# Loki Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  labels:
+    app: loki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      containers:
+      - name: loki
+        image: grafana/loki:3.4.2
+        ports:
+        - containerPort: 3100
+        env:
+        - name: LOKI_STORAGE_BACKEND
+          value: "memory"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+---
+# Loki Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  labels:
+    app: loki
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3100
+    targetPort: 3100
+    protocol: TCP
+  selector:
+    app: loki

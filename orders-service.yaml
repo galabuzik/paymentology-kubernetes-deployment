@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-service
+  labels:
+    app: orders-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orders-service
+  template:
+    metadata:
+      labels:
+        app: orders-service
+    spec:
+      containers:
+      - name: orders-service
+        image: 942204942825.dkr.ecr.eu-north-1.amazonaws.com/orders-service:latest
+        ports:
+        - containerPort: 6000
+        env:
+        - name: OTEL_SERVICE_NAME
+          value: "orders-service"
+        - name: OTEL_INSTRUMENTATION_MICROMETER_ENABLED
+          value: "true"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector:4318"
+        - name: OTEL_EXPORTER_OTLP_METRICS_ENABLED
+          value: "true"
+        - name: OTEL_EXPORTER_OTLP_TRAES_ENABLED
+          value: "true"
+        - name: OTEL_EXPORTER_OTLP_LOGGING_ENABLED
+          value: "true"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-service
+  labels:
+    app: orders-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6000
+    targetPort: 6000
+    protocol: TCP
+  selector:
+    app: orders-service

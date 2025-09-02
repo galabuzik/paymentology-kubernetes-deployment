@@ -1,0 +1,55 @@
+ordersService:
+  enabled: true
+  name: orders-service
+  image:
+    repository: 942204942825.dkr.ecr.eu-north-1.amazonaws.com/orders-service
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  replicaCount: 1
+  
+  service:
+    type: ClusterIP
+    port: 6000
+    targetPort: 6000
+  
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  
+  env:
+    OTEL_SERVICE_NAME: "orders-service"
+    OTEL_INSTRUMENTATION_MICROMETER_ENABLED: "true"
+    OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+    OTEL_EXPORTER_OTLP_METRICS_ENABLED: "true"
+    OTEL_EXPORTER_OTLP_TRAES_ENABLED: "true"
+    OTEL_EXPORTER_OTLP_LOGGING_ENABLED: "true"
+
+deliveryService:
+  enabled: true
+  name: delivery-service
+  image:
+    repository: 942204942825.dkr.ecr.eu-north-1.amazonaws.com/delivery-service
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  replicaCount: 1
+  
+  service:
+    type: ClusterIP
+    port: 6001
+    targetPort: 6001
+  
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  
+  env: {}

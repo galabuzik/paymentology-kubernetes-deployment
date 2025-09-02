@@ -1,0 +1,51 @@
+{{- if .Values.deliveryService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deliveryService.name }}
+  labels:
+    app: {{ .Values.deliveryService.name }}
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.deliveryService.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.deliveryService.name }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deliveryService.name }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: {{ .Values.deliveryService.name }}
+        image: "{{ .Values.deliveryService.image.repository }}:{{ .Values.deliveryService.image.tag }}"
+        imagePullPolicy: {{ .Values.deliveryService.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.deliveryService.service.targetPort }}
+        env:
+        {{- range $key, $value := .Values.deliveryService.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.deliveryService.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.deliveryService.name }}
+  labels:
+    app: {{ .Values.deliveryService.name }}
+    release: {{ .Release.Name }}
+spec:
+  type: {{ .Values.deliveryService.service.type }}
+  ports:
+  - port: {{ .Values.deliveryService.service.port }}
+    targetPort: {{ .Values.deliveryService.service.targetPort }}
+    protocol: TCP
+  selector:
+    app: {{ .Values.deliveryService.name }}
+    release: {{ .Release.Name }}
+{{- end }}

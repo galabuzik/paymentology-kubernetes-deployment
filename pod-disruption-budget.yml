@@ -1,0 +1,24 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: orders-service-pdb-ha
+  labels:
+    app: orders-service
+spec:
+  minAvailable: 1 
+  selector:
+    matchLabels:
+      app: orders-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: delivery-service-pdb-ha
+  labels:
+    app: delivery-service
+spec:
+  minAvailable: 1 
+  selector:
+    matchLabels:
+      app: delivery-service

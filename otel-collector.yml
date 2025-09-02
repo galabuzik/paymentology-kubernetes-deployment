@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  labels:
+    app: otel-collector
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          http:
+            endpoint: 0.0.0.0:4318
+    processors:
+      batch:
+    exporters:
+      file:
+        path: /tmp/telemetry-data.json
+      otlphttp/metrics:
+        endpoint: "http://mimir-1:8080/otlp"
+        headers:
+          "X-Scope-OrgID": "paymentology"
+      otlphttp/traces:
+        endpoint: "http://tempo:4318"
+      otlphttp/logs:
+        endpoint: "http://loki:3100/otlp"
+      debug:
+        verbosity: detailed
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlphttp/traces]
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug, otlphttp/metrics]
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlphttp/logs]
+  telemetry-data.json: |
+    {}
+  telemetry-data.json: |
+    {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  labels:
+    app: otel-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      containers:
+      - name: otel-collector
+        image: otel/opentelemetry-collector:0.120.0
+        args: ["--config=/tmp/otel-collector-config.yaml"]
+        ports:
+        - containerPort: 4318
+        - containerPort: 4317
+        volumeMounts:
+        - name: config-volume
+          mountPath: /tmp/otel-collector-config.yaml
+          subPath: otel-collector-config.yaml
+        - name: config-volume
+          mountPath: /tmp/telemetry-data.json
+          subPath: telemetry-data.json
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: config-volume
+        configMap:
+          name: otel-collector-config
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  labels:
+    app: otel-collector
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 4318
+    targetPort: 4318
+    protocol: TCP
+  - name: grpc
+    port: 4317
+    targetPort: 4317
+    protocol: TCP
+  selector:
+    app: otel-collector
