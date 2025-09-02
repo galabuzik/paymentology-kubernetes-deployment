@@ -1,10 +1,11 @@
 # Delivery System K8s Manifests
 
-Kubernetes manifests files for the microservices we built in the previous task. Also includes deploying the observability plaftorm on Kubernetes.
+This repo contains Kubernetes manifest files for deploying the microservices developed in the previous task. The Docker containers were built in the previous task as well, and the Dockerfiles are available in the respective directories of each service.
 
-## Architecture Overview
+ The repo also includes kubernetes manifest files required to deploy the observability stack on Kubernetes.
+## Overview
 
-This repository contains microservices setup with:
+
 - **Two core business services**: Orders Service and Delivery Service.
 - **Full observability stack**: OpenTelemetry, Grafana, Prometheus/Mimir, Tempo, and Loki.
 - **Auto-scaling capabilities**: Horizontal Pod Autoscaling (HPA)
@@ -38,7 +39,7 @@ The platform implements a complete OpenTelemetry-based observability solution:
 #### 1. Helm Chart Deployment (`application-helm-chart/`)
 - **Chart.yaml**: Helm chart metadata and version information
 - **Templates**: Templated Kubernetes manifests for flexible deployments
-- **Values.yaml**: Configuration values with  defaults
+- **values.yaml**: Configuration values with  defaults
 
 #### 2. Direct YAML Deployment
 Individual service manifests for direct `kubectl apply`:
