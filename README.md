@@ -23,28 +23,28 @@ This repo contains Kubernetes manifest files for deploying the microservices dev
 The platform implements a complete OpenTelemetry-based observability solution:
 
 #### OpenTelemetry Collector (`otel-collector.yml`)
-- **Function**: Central telemetry data collection and routing hub
-- **Protocols**: HTTP (4318) and gRPC (4317) OTLP endpoints
-- **Processing**: Batches and routes metrics, traces, and logs to appropriate backends
-- **Integration**: Receives data from instrumented applications and forwards to Grafana stack
+- **Function**: Central telemetry data collection and routing hub.
+- **Protocols**: HTTP (4318) and gRPC (4317) OTLP endpoints.
+- **Processing**: Batches and routes metrics, traces, and logs to appropriate backends.
+- **Integration**: Receives data from instrumented applications and forwards to Grafana stack.
 
 #### Monitoring & Visualization
 - **Grafana**: Unified dashboard and visualization platform (Port 3000)
-- **Peometheus/Mimir**: High-performance metrics storage and querying
+- **Peometheus/Mimir**: High-performance metrics storage and querying.
 - **Tempo**: Distributed tracing backend for request tracking
-- **Loki**: Log aggregation and searching system
+- **Loki**: Log aggregation and searching system.
 
 ### Deployment Options
 
 #### 1. Helm Chart Deployment (`application-helm-chart/`)
-- **Chart.yaml**: Helm chart metadata and version information
-- **Templates**: Templated Kubernetes manifests for flexible deployments
-- **values.yaml**: Configuration values with  defaults
+- **Chart.yaml**: Helm chart metadata and version information.
+- **Templates**: Templated Kubernetes manifests for flexible deployments.
+- **values.yaml**: Configuration values with  defaults.
 
 #### 2. Direct YAML Deployment
 Individual service manifests for direct `kubectl apply`:
-- `orders-service.yaml` - Orders service deployment and service
-- `delivery-service.yml` - Delivery service deployment and service
+- `orders-service.yaml` - Orders service deployment and service.
+- `delivery-service.yml` - Delivery service deployment and service.
 
 ##  Configuration Files
 
@@ -95,6 +95,6 @@ After deployment, services are available through the ALB ingress:
 
 - Services use AWS ECR for container images
 - Anonymous authentication enabled for Grafana (demo setup)
-- OTEL endpoints configured for internal cluster communication
-- All services run with ClusterIP for internal communication
-- External access managed through ALB ingress
+- OTEL endpoints configured for internal cluster communication.
+- All services run with ClusterIP for internal communication.
+- External access managed through ALB ingress.
